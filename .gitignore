@@ -1,0 +1,4 @@
+*.swp
+/*.o
+/astdemo
+/depend.mak
