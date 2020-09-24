@@ -3,6 +3,7 @@
 #include "util.h"
 #include "lexer.h"
 #include "parser.h"
+#include "parser2.h"
 #include "ast.h"
 #include "buildast.h"
 #include "treeprint.h"
@@ -76,7 +77,9 @@ int main(int argc, char **argv) {
       treeprint(ast, ast_get_name_for_tag);
     }
   } else {
-    printf("TODO: build AST directly in parser\n");
+    struct Parser2 *parser2 = parser2_create(lexer);
+    struct Node *ast = parser2_parse(parser2);
+    treeprint(ast, ast_get_name_for_tag);
   }
 
   return 0;
