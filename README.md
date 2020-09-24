@@ -31,3 +31,40 @@ ADD
 |     +--VARREF[c]
 +--INT_LITERAL[5]
 ```
+
+The `-p` option prints the parse tree.  Parse tree for example input:
+
+```
+E
++--T
+|  +--F
+|  |  +--IDENTIFIER[a]
+|  +--T'
++--E'
+   +--MINUS[-]
+   +--T
+   |  +--F
+   |  |  +--IDENTIFIER[b]
+   |  +--T'
+   |     +--TIMES[*]
+   |     +--F
+   |     |  +--INTEGER_LITERAL[3]
+   |     +--T'
+   +--E'
+      +--MINUS[-]
+      +--T
+      |  +--F
+      |  |  +--INTEGER_LITERAL[4]
+      |  +--T'
+      |     +--TIMES[*]
+      |     +--F
+      |     |  +--IDENTIFIER[c]
+      |     +--T'
+      +--E'
+         +--PLUS[+]
+         +--T
+         |  +--F
+         |  |  +--INTEGER_LITERAL[5]
+         |  +--T'
+         +--E'
+```
