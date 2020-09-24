@@ -170,7 +170,7 @@ struct Node *Parser::expect(enum TokenKind tok_kind) {
 
 // This function translates token and parse node tags into strings
 // for parse tree printing
-const char *pfxcalc_stringify_node_tag(int tag) {
+const char *astdemo_stringify_node_tag(int tag) {
   switch (tag) {
   // terminal symbols:
   case TOK_IDENTIFIER:
@@ -226,5 +226,5 @@ struct Node *parser_parse(struct Parser *parser) {
 }
 
 void parser_print_parse_tree(struct Node *root) {
-  treeprint(root, pfxcalc_stringify_node_tag);
+  treeprint(root, astdemo_stringify_node_tag);
 }
