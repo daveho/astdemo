@@ -22,6 +22,7 @@
 // T' -> epsilon
 // F -> n
 // F -> i
+// F -> ( E )
 
 struct Parser {
 private:
@@ -134,6 +135,7 @@ struct Node *Parser::parse_TPrime() {
 struct Node *Parser::parse_F() {
   // F -> ^ n
   // F -> ^ i
+  // F -> ^ ( E )
 
   struct Node *f = node_build0(NODE_F);
 
@@ -149,6 +151,11 @@ struct Node *Parser::parse_F() {
   } else if (tag == TOK_IDENTIFIER) {
     // F -> ^ i
     node_add_kid(f, expect(TOK_IDENTIFIER));
+  } else if (tag == TOK_LPAREN) {
+    // F -> ^ ( E )
+    node_add_kid(f, expect(TOK_LPAREN));
+    node_add_kid(f, parse_E());
+    node_add_kid(f, expect(TOK_RPAREN));
   } else {
     error_on_node(next_tok, "Invalid primary expression");
   }
@@ -185,6 +192,10 @@ const char *astdemo_stringify_node_tag(int tag) {
     return "TIMES";
   case TOK_DIVIDE:
     return "DIVIDE";
+  case TOK_LPAREN:
+    return "LPAREN";
+  case TOK_RPAREN:
+    return "RPAREN";
 
   // nonterminal symbols:
   case NODE_E:

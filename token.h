@@ -15,6 +15,8 @@ enum TokenKind {
   TOK_MINUS,
   TOK_TIMES,
   TOK_DIVIDE,
+  TOK_LPAREN,
+  TOK_RPAREN,
 };
 
 #ifdef __cplusplus

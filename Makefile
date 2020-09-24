@@ -1,4 +1,4 @@
-C_SRCS = main.c util.c node.c treeprint.c error.c
+C_SRCS = main.c buildast.c ast.c util.c node.c treeprint.c error.c
 C_OBJS = $(C_SRCS:%.c=%.o)
 
 CXX_SRCS = cpputil.cpp lexer.cpp parser.cpp

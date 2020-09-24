@@ -134,6 +134,10 @@ struct Node *Lexer::read_token() {
       return token_create(TOK_TIMES, lexeme, line, col);
     case '/':
       return token_create(TOK_DIVIDE, lexeme, line, col);
+    case '(':
+      return token_create(TOK_LPAREN, lexeme, line, col);
+    case ')':
+      return token_create(TOK_RPAREN, lexeme, line, col);
     default:
       {
         struct SourceInfo pos = {

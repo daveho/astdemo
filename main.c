@@ -3,23 +3,32 @@
 #include "util.h"
 #include "lexer.h"
 #include "parser.h"
-#include "interp.h"
+#include "ast.h"
+#include "buildast.h"
+#include "treeprint.h"
 
 enum {
-  INTERPRET,
   PRINT_TOKENS,
   PRINT_PARSE_TREE,
+  BUILD_AST,
+  PARSER2,
 };
 
 int main(int argc, char **argv) {
-  int mode = INTERPRET, opt;
-  while ((opt = getopt(argc, argv, "lp")) != -1) {
+  int mode = PRINT_PARSE_TREE, opt;
+  while ((opt = getopt(argc, argv, "lpb2")) != -1) {
     switch (opt) {
     case 'l':
       mode = PRINT_TOKENS;
       break;
     case 'p':
       mode = PRINT_PARSE_TREE;
+      break;
+    case 'b':
+      mode = BUILD_AST;
+      break;
+    case '2':
+      mode = PARSER2;
       break;
     default:
       err_fatal("Unknown option: %c\n", opt);
@@ -56,15 +65,18 @@ int main(int argc, char **argv) {
         node_destroy(tok);
       }
     }
-  } else {
+  } else if (mode == PRINT_PARSE_TREE || mode == BUILD_AST) {
     struct Parser *parser = parser_create(lexer);
     struct Node *root = parser_parse(parser);
 
     if (mode == PRINT_PARSE_TREE) {
       parser_print_parse_tree(root);
     } else {
-      printf("TODO: interpret\n");
+      struct Node *ast = buildast(root);
+      treeprint(ast, ast_get_name_for_tag);
     }
+  } else {
+    printf("TODO: build AST directly in parser\n");
   }
 
   return 0;
