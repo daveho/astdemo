@@ -41,11 +41,11 @@ static struct Node *buildast_left(struct Node *ast, struct Node *right) {
   int op_tag = node_get_tag(op);
 
   // second child is an operand (T or F), convert it to AST
-  struct Node *term_ast = buildast(node_get_kid(right, 1));
+  struct Node *operand_ast = buildast(node_get_kid(right, 1));
 
-  // join current additive expression AST with new term
+  // join current expression AST with new operand
   int ast_tag = buildast_operator_tag(op_tag);
-  ast = node_build2(ast_tag, ast, term_ast);
+  ast = node_build2(ast_tag, ast, operand_ast);
 
   // continue recursively
   return buildast_left(ast, node_get_kid(right, 2));
