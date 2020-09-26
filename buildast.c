@@ -56,21 +56,21 @@ struct Node *buildast(struct Node *t) {
 
   switch (tag) {
   case NODE_E:
-  case NODE_T:
+  case NODE_T: // restructure for left associativity
     return buildast_left(buildast(node_get_kid(t, 0)), node_get_kid(t, 1));
 
-  case NODE_F:
-    return buildast(node_get_kid(t, node_get_tag(t) == TOK_LPAREN ? 1 : 0));
+  case NODE_F: // parenthesized expression, identifier, or integer literal
+    return buildast(node_get_kid(t, node_get_num_kids(t) == 3 ? 1 : 0));
 
-  case TOK_IDENTIFIER:
+  case TOK_IDENTIFIER: // variable reference
     return node_alloc_str_copy(AST_VARREF, node_get_str(t));
 
-  case TOK_INTEGER_LITERAL:
+  case TOK_INTEGER_LITERAL: // integer literal
     {
-       const char *lexeme = node_get_str(t);
-       struct Node *ast = node_alloc_str_copy(AST_INT_LITERAL, lexeme);
-       node_set_ival(ast, atol(lexeme));
-       return ast;
+      const char *lexeme = node_get_str(t);
+      struct Node *ast = node_alloc_str_copy(AST_INT_LITERAL, lexeme);
+      node_set_ival(ast, atol(lexeme));
+      return ast;
     }
 
   default:
