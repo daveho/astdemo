@@ -8,13 +8,13 @@ const char *ast_get_name_for_tag(int tag) {
   case AST_SUB:
     return "SUB";
   case AST_MULTIPLY:
-     return "MULTIPLY";
+    return "MULTIPLY";
   case AST_DIVIDE:
-     return "DIVIDE";
+    return "DIVIDE";
   case AST_VARREF:
-     return "VARREF";
+    return "VARREF";
   case AST_INT_LITERAL:
-     return "INT_LITERAL";
+    return "INT_LITERAL";
   default:
     err_fatal("Unknown AST node type %d\n", tag);
     return "<<unknown>>";
