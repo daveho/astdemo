@@ -1,97 +1,77 @@
+// Copyright (c) 2021, David H. Hovemeyer <david.hovemeyer@gmail.com>
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+// OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+
 #ifndef NODE_H
 #define NODE_H
 
-// Node datatype and functions
+#include <vector>
+#include <string>
+#include "location.h"
+#include "node_base.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
+class Node : public NodeBase {
+private:
+  int m_tag;
+  std::vector<Node *> m_kids;
+  std::string m_str;
+  Location m_loc;
+  bool m_loc_was_set_explicitly;
 
-// Source information structure.
-struct SourceInfo {
-  const char *filename;
-  int line, col;
+  // no value semantics
+  Node(const Node &);
+  Node &operator=(const Node &);
+
+  Node(int tag, const std::string &str, const std::vector<Node *> &kids);
+  Node(int tag, const std::string &str, const std::initializer_list<Node *> kids);
+
+public:
+  typedef std::vector<Node *>::const_iterator const_iterator;
+
+  // Node::I is a concise shorthand for std::initializer_list<Node *>,
+  // and is necessary when creating node objects with initializer lists
+  // (for adding children) using an Arena
+  typedef std::initializer_list<Node *> I;
+
+  Node(int tag);
+  Node(int tag, std::initializer_list<Node *> kids);
+  Node(int tag, const std::vector<Node *> &kids);
+  Node(int tag, const std::string &str);
+
+  virtual ~Node();
+
+  int get_tag() const { return m_tag; }
+  std::string get_str() const { return m_str; }
+
+  void set_str(const std::string &str) { m_str = str; }
+
+  void append_kid(Node *kid);
+  void prepend_kid(Node *kid);
+  unsigned get_num_kids() const { return unsigned(m_kids.size()); }
+  Node *get_kid(unsigned index) const { return m_kids.at(index); }
+  Node *get_last_kid() const { return m_kids.back(); }
+
+  const_iterator cbegin() const { return m_kids.cbegin(); }
+  const_iterator cend() const { return m_kids.cend(); }
+
+  void set_loc(const Location &loc) { m_loc = loc; m_loc_was_set_explicitly = true; }
+  const Location &get_loc() const { return m_loc; }
 };
-
-struct Node;
-
-// Create Node with specified tag.
-struct Node *node_alloc(int tag);
-
-// Create a node with a string value by copying a specified string.
-struct Node *node_alloc_str_copy(int tag, const char *str_to_copy);
-
-// Create a node with a string value by adopting specific string,
-// which will be freed when the Node is destroyed.
-struct Node *node_alloc_str_adopt(int tag, char *str_to_adopt);
-
-// Create a node with a given integer value.
-struct Node *node_alloc_ival(int tag, long ival);
-
-// Convenience functions to create a Node with specified tag value
-// and pointers to children.
-struct Node *node_build0(int tag);
-struct Node *node_build1(int tag, struct Node *child1);
-struct Node *node_build2(int tag, struct Node *child1, struct Node *child2);
-struct Node *node_build3(int tag, struct Node *child1, struct Node *child2, struct Node *child3);
-struct Node *node_build4(int tag,
-                         struct Node *child1, struct Node *child2, struct Node *child3,
-                         struct Node *child4);
-struct Node *node_build5(int tag,
-                         struct Node *child1, struct Node *child2, struct Node *child3,
-                         struct Node *child4, struct Node *child5);
-struct Node *node_build6(int tag,
-                         struct Node *child1, struct Node *child2, struct Node *child3,
-                         struct Node *child4, struct Node *child5, struct Node *child6);
-struct Node *node_build7(int tag,
-                         struct Node *child1, struct Node *child2, struct Node *child3,
-                         struct Node *child4, struct Node *child5, struct Node *child6,
-                         struct Node *child7);
-struct Node *node_build8(int tag,
-                         struct Node *child1, struct Node *child2, struct Node *child3,
-                         struct Node *child4, struct Node *child5, struct Node *child6,
-                         struct Node *child7, struct Node *child8);
-
-// Create a Node with specified tag and arbitrary pointers to children.
-// The sequence of child pointers should be terminated with a null pointer.
-struct Node *node_buildn(int tag, ...);
-
-// Destroy a Node.
-void node_destroy(struct Node *n);
-
-// Recursively destroy a tree of Nodes.
-void node_destroy_recursive(struct Node *n);
-
-// Get a Node's tag.
-int node_get_tag(struct Node *n);
-
-// Get the number of children of a Node.
-int node_get_num_kids(struct Node *n);
-
-// Append a child Node.
-void node_add_kid(struct Node *n, struct Node *kid);
-
-// Get a child Node (index 0 is the first child.)
-struct Node *node_get_kid(struct Node *n, int index);
-int node_first_kid_has_tag(struct Node *n, int tag);
-
-// Set the SourceInfo for a Node.
-void node_set_source_info(struct Node *n, struct SourceInfo source_info);
-
-// Get the SoureeInfo for a Node.
-struct SourceInfo node_get_source_info(struct Node *n);
-
-// Get the string value of a Node.
-const char *node_get_str(struct Node *n);
-
-// Get integer value of a Node.
-long node_get_ival(struct Node *n);
-
-// Set integer value of a Node.
-void node_set_ival(struct Node *n, long ival);
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
 
 #endif // NODE_H

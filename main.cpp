@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <unistd.h> // for getopt
-#include "util.h"
 #include "lexer.h"
 #include "parser.h"
 #include "parser2.h"
 #include "ast.h"
 #include "buildast.h"
+#include "exceptions.h"
 #include "treeprint.h"
 
 enum {
@@ -15,7 +15,8 @@ enum {
   PARSER2,
 };
 
-int main(int argc, char **argv) {
+
+int execute(int argc, char **argv) {
   int mode = PRINT_PARSE_TREE, opt;
   while ((opt = getopt(argc, argv, "lpb2")) != -1) {
     switch (opt) {
@@ -32,7 +33,7 @@ int main(int argc, char **argv) {
       mode = PARSER2;
       break;
     default:
-      err_fatal("Unknown option: %c\n", opt);
+      RuntimeError::raise("Unknown option: %c", opt);
     }
   }
 
@@ -44,43 +45,55 @@ int main(int argc, char **argv) {
     filename = argv[optind];
     in = fopen(filename, "r");
     if (!in) {
-      err_fatal("Could not open input file '%s'\n", filename);
+      RuntimeError::raise("Could not open input file '%s'", filename);
     }
   } else {
     filename = "<stdin>";
     in = stdin;
   }
 
-  struct Lexer *lexer = lexer_create(in, filename);
+  Lexer *lexer = new Lexer(in, filename);
 
   if (mode == PRINT_TOKENS) {
-    int done = 0;
+    bool done = false;
     while (!done) {
-      struct Node *tok = lexer_next(lexer);
+      Node *tok = lexer->next();
       if (!tok) {
-        done = 1;
+        done = true;
       } else {
-        int kind = node_get_tag(tok);
-        const char *lexeme = node_get_str(tok);
-        printf("%d:%s\n", kind, lexeme);
-        node_destroy(tok);
+        int kind = tok->get_tag();
+        std::string lexeme = tok->get_str();
+        printf("%d:%s\n", kind, lexeme.c_str());
+        delete tok;
       }
     }
   } else if (mode == PRINT_PARSE_TREE || mode == BUILD_AST) {
-    struct Parser *parser = parser_create(lexer);
-    struct Node *root = parser_parse(parser);
+    Parser *parser = new Parser(lexer);
+    Node *root = parser->parse();
 
     if (mode == PRINT_PARSE_TREE) {
-      parser_print_parse_tree(root);
+      ParserTreePrint tp;
+      tp.print(root);
     } else {
-      struct Node *ast = buildast(root);
-      treeprint(ast, ast_get_name_for_tag);
+      Node *ast = buildast(root);
+      ASTTreePrint tp;
+      tp.print(ast);
     }
   } else {
-    struct Parser2 *parser2 = parser2_create(lexer);
-    struct Node *ast = parser2_parse(parser2);
-    treeprint(ast, ast_get_name_for_tag);
+    Parser2 *parser2 = new Parser2(lexer);
+    Node *ast = parser2->parse();
+    ASTTreePrint tp;
+    tp.print(ast);
   }
 
   return 0;
+}
+
+int main(int argc, char **argv) {
+  try {
+    return execute(argc, argv);
+  } catch (NearlyCException &ex) {
+    fprintf(stderr, "Error: %s\n", ex.what());
+    return 1;
+  }
 }

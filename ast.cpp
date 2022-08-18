@@ -1,7 +1,13 @@
-#include "util.h"
+#include "exceptions.h"
 #include "ast.h"
 
-const char *ast_get_name_for_tag(int tag) {
+ASTTreePrint::ASTTreePrint() {
+}
+
+ASTTreePrint::~ASTTreePrint() {
+}
+
+std::string ASTTreePrint::node_tag_to_string(int tag) const {
   switch (tag) {
   case AST_ADD:
     return "ADD";
@@ -16,7 +22,6 @@ const char *ast_get_name_for_tag(int tag) {
   case AST_INT_LITERAL:
     return "INT_LITERAL";
   default:
-    err_fatal("Unknown AST node type %d\n", tag);
-    return "<<unknown>>";
+    RuntimeError::raise("Unknown AST node type %d\n", tag);
   }
 }

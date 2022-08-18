@@ -2,38 +2,12 @@
 #include <string>
 #include "cpputil.h"
 #include "token.h"
-#include "error.h"
+#include "exceptions.h"
 #include "lexer.h"
 
 ////////////////////////////////////////////////////////////////////////
 // Lexer implementation
 ////////////////////////////////////////////////////////////////////////
-
-struct Lexer {
-private:
-  FILE *m_in;
-  struct Node *m_next;
-  std::string m_filename;
-  int m_line, m_col;
-  bool m_eof;
-
-public:
-  Lexer(FILE *in, const std::string &filename);
-  ~Lexer();
-
-  struct Node *next();
-  struct Node *peek();
-
-  struct SourceInfo get_current_pos() const;
-
-private:
-  int read();
-  void unread(int c);
-  void fill();
-  struct Node *read_token();
-  struct Node *read_continued_token(enum TokenKind kind, const std::string &lexeme_start, int line, int col, int (*pred)(int));
-  struct Node *token_create(enum TokenKind kind, const std::string &lexeme, int line, int col);
-};
 
 Lexer::Lexer(FILE *in, const std::string &filename)
   : m_in(in)
@@ -47,25 +21,20 @@ Lexer::Lexer(FILE *in, const std::string &filename)
 Lexer::~Lexer() {
 }
 
-struct Node *Lexer::next() {
+Node *Lexer::next() {
   fill();
   Node *tok = m_next;
   m_next = nullptr;
   return tok;
 }
 
-struct Node *Lexer::peek() {
+Node *Lexer::peek() {
   fill();
   return m_next;
 }
 
-struct SourceInfo Lexer::get_current_pos() const {
-  SourceInfo source_pos = {
-    .filename = m_filename.c_str(),
-    .line = m_line,
-    .col = m_col,
-  };
-  return source_pos;
+Location Lexer::get_current_pos() const {
+  return Location(m_filename, m_line, m_col);
 }
 
 // Read the next character of input, returning -1 (and setting m_eof to true)
@@ -99,7 +68,7 @@ void Lexer::fill() {
   }
 }
 
-struct Node *Lexer::read_token() {
+Node *Lexer::read_token() {
   int c, line = -1, col = -1;
 
   // skip whitespace characters until a non-whitespace character is read
@@ -139,16 +108,7 @@ struct Node *Lexer::read_token() {
     case ')':
       return token_create(TOK_RPAREN, lexeme, line, col);
     default:
-      {
-        struct SourceInfo pos = {
-          .filename = m_filename.c_str(),
-          .line = line,
-          .col = col,
-        };
-        std::string errmsg = cpputil::format("Unrecognized character '%c'", c).c_str();
-        error_at_pos(pos, errmsg.c_str());
-        return nullptr;
-      }
+      SyntaxError::raise(get_current_pos(), "Unrecognized character '%c'", c);
     }
   } 
 }
@@ -156,7 +116,7 @@ struct Node *Lexer::read_token() {
 // Read the continuation of a (possibly) multi-character token, such as
 // an identifier or integer literal.  pred is a pointer to a predicate
 // function to determine which characters are valid continuations.
-struct Node *Lexer::read_continued_token(enum TokenKind kind, const std::string &lexeme_start, int line, int col, int (*pred)(int)) {
+Node *Lexer::read_continued_token(enum TokenKind kind, const std::string &lexeme_start, int line, int col, int (*pred)(int)) {
   std::string lexeme(lexeme_start);
   for (;;) {
     int c = read();
@@ -173,37 +133,9 @@ struct Node *Lexer::read_continued_token(enum TokenKind kind, const std::string 
 }
 
 // Helper function to create a Node object to represent a token.
-struct Node *Lexer::token_create(enum TokenKind kind, const std::string &lexeme, int line, int col) {
-  struct Node *token = node_alloc_str_copy(kind, lexeme.c_str());
-  struct SourceInfo source_info = {
-    .filename = m_filename.c_str(),
-    .line = line,
-    .col = col,
-  };
-  node_set_source_info(token, source_info);
+Node *Lexer::token_create(enum TokenKind kind, const std::string &lexeme, int line, int col) {
+  Node *token = new Node(kind, lexeme);
+  Location source_info(m_filename, line, col);
+  token->set_loc(source_info);
   return token;
-}
-
-////////////////////////////////////////////////////////////////////////
-// Lexer API functions
-////////////////////////////////////////////////////////////////////////
-
-struct Lexer *lexer_create(FILE *in, const char *filename) {
-  return new Lexer(in, filename);
-}
-
-void lexer_destroy(struct Lexer *lexer) {
-  delete lexer;
-}
-
-struct Node *lexer_next(struct Lexer *lexer) {
-  return lexer->next();
-}
-
-struct Node *lexer_peek(struct Lexer *lexer) {
-  return lexer->peek();
-}
-
-struct SourceInfo lexer_get_current_pos(struct Lexer *lexer) {
-  return lexer->get_current_pos();
 }

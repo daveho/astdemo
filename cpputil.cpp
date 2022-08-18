@@ -1,45 +1,45 @@
+// Copyright (c) 2021, David H. Hovemeyer <david.hovemeyer@gmail.com>
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+// OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+
 #include <cstdarg>
 #include <cstdio>
-#if __cplusplus < 201703L
-#  include <memory>
-#endif
 #include "cpputil.h"
 
-// See: https://codereview.stackexchange.com/questions/187183/create-a-c-string-using-printf-style-formatting
+namespace {
+const unsigned MAX_STRBUF_SIZE = 1024;
+}
 
-std::string cpputil::format(const char *fmt, ...)
-{
-    char buf[256];
+std::string cpputil::format(const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  std::string s = vformat(fmt, args);
+  va_end(args);
 
-    va_list args;
-    va_start(args, fmt);
-    const auto r = std::vsnprintf(buf, sizeof buf, fmt, args);
-    va_end(args);
+  return s;
+}
 
-    if (r < 0)
-        // conversion failed
-        return {};
+std::string cpputil::vformat(const char *fmt, va_list args) {
+  char buf[MAX_STRBUF_SIZE];
 
-    const size_t len = r;
-    if (len < sizeof buf)
-        // we fit in the buffer
-        return { buf, len };
+  vsnprintf(buf, MAX_STRBUF_SIZE, fmt, args);
+  buf[MAX_STRBUF_SIZE-1] = '\0';
 
-#if __cplusplus >= 201703L
-    // C++17: Create a string and write to its underlying array
-    std::string s(len, '\0');
-    va_start(args, fmt);
-    std::vsnprintf(s.data(), len+1, fmt, args);
-    va_end(args);
-
-    return s;
-#else
-    // C++11 or C++14: We need to allocate scratch memory
-    auto vbuf = std::unique_ptr<char[]>(new char[len+1]);
-    va_start(args, fmt);
-    std::vsnprintf(vbuf.get(), len+1, fmt, args);
-    va_end(args);
-
-    return { vbuf.get(), len };
-#endif
+  return std::string(buf);
 }

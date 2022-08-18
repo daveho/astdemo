@@ -2,23 +2,33 @@
 #define LEXER_H
 
 #include <stdio.h>
+#include "token.h"
 #include "node.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
+class Lexer {
+private:
+  FILE *m_in;
+  Node *m_next;
+  std::string m_filename;
+  int m_line, m_col;
+  bool m_eof;
 
-struct Lexer;
+public:
+  Lexer(FILE *in, const std::string &filename);
+  ~Lexer();
 
-struct Lexer *lexer_create(FILE *in, const char *filename);
-void lexer_destroy(struct Lexer *lexer);
+  Node *next();
+  Node *peek();
 
-struct Node *lexer_next(struct Lexer *lexer);
-struct Node *lexer_peek(struct Lexer *lexer);
-struct SourceInfo lexer_get_current_pos(struct Lexer *lexer);
+  Location get_current_pos() const;
 
-#ifdef __cplusplus
-}
-#endif // __cplusplus
+private:
+  int read();
+  void unread(int c);
+  void fill();
+  Node *read_token();
+  Node *read_continued_token(enum TokenKind kind, const std::string &lexeme_start, int line, int col, int (*pred)(int));
+  Node *token_create(enum TokenKind kind, const std::string &lexeme, int line, int col);
+};
 
 #endif // LEXER_H

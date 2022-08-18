@@ -3,10 +3,7 @@
 
 #include "lexer.h"
 #include "node.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
+#include "treeprint.h"
 
 // Enumeration to define the nonterminal symbols:
 // these should have different integer values than
@@ -20,17 +17,38 @@ enum Nonterminal {
   NODE_F,
 };
 
-struct Parser;
+class ParserTreePrint : public TreePrint {
+public:
+  ParserTreePrint();
+  virtual ~ParserTreePrint();
 
-struct Parser *parser_create(struct Lexer *lexer_to_adopt);
-void parser_destroy(struct Parser *parser);
+  virtual std::string node_tag_to_string(int tag) const;
+};
 
-struct Node *parser_parse(struct Parser *parser);
+class Parser {
+private:
+  struct Lexer *m_lexer;
+  Node *m_next;
 
-void parser_print_parse_tree(struct Node *root);
+public:
+  Parser(Lexer *lexer_to_adopt);
+  ~Parser();
 
-#ifdef __cplusplus
-}
-#endif // __cplusplus
+  Node *parse();
+
+private:
+  // Parse functions for nonterminal grammar symbols
+  Node *parse_E();
+  Node *parse_EPrime();
+  Node *parse_T();
+  Node *parse_TPrime();
+  Node *parse_F();
+
+  // Consume a specific token, wrapping it in a Node
+  Node *expect(enum TokenKind tok_kind);
+
+  // Report an error at current lexer position
+  void error_at_current_pos(const std::string &msg);
+};
 
 #endif // PARSER_H

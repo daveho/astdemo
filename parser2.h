@@ -4,20 +4,33 @@
 #include "lexer.h"
 #include "node.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
+class Parser2 {
+private:
+  Lexer *m_lexer;
+  Node *m_next;
 
-struct Parser2;
+public:
+  Parser2(Lexer *lexer_to_adopt);
+  ~Parser2();
 
-struct Parser2 *parser2_create(struct Lexer *lexer_to_adopt);
-void parser2_destroy(struct Parser2 *parser);
+  Node *parse();
 
-// This function returns an AST!
-struct Node *parser2_parse(struct Parser2 *parser);
+private:
+  // Parse functions for nonterminal grammar symbols
+  Node *parse_E();
+  Node *parse_EPrime(Node *ast);
+  Node *parse_T();
+  Node *parse_TPrime(Node *ast);
+  Node *parse_F();
 
-#ifdef __cplusplus
-}
-#endif // __cplusplus
+  // Consume a specific token, wrapping it in a Node
+  Node *expect(enum TokenKind tok_kind);
+
+  // Consume a specific token and discard it
+  void expect_and_discard(enum TokenKind tok_kind);
+
+  // Report an error at current lexer position
+  void error_at_current_pos(const std::string &msg);
+};
 
 #endif // PARSER2_H

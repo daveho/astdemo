@@ -1,10 +1,12 @@
 #include <stdlib.h>
-#include "util.h"
 #include "node.h"
 #include "token.h"
 #include "ast.h"
 #include "parser.h" // for parse node tags
+#include "exceptions.h"
 #include "buildast.h"
+
+namespace {
 
 // Get an AST operator node tag from a token operator tag
 int buildast_operator_tag(int op_tag) {
@@ -18,8 +20,7 @@ int buildast_operator_tag(int op_tag) {
   case TOK_DIVIDE:
     return TOK_DIVIDE;
   default:
-    err_fatal("Unknown operator %d in parse tree\n", op_tag);
-    return -1;
+    RuntimeError::raise("Unknown operator %d in parse tree", op_tag);
   }
 }
 
@@ -30,51 +31,47 @@ int buildast_operator_tag(int op_tag) {
 //   ast - the portion of the AST that has been built so far
 //   right - parse tree continuation that may contain more operators
 //           and expressions (E' or T')
-static struct Node *buildast_left(struct Node *ast, struct Node *right) {
-  if (node_get_num_kids(right) == 0) {
+Node *buildast_left(Node *ast, Node *right) {
+  if (right->get_num_kids() == 0) {
     // done with expression
     return ast;
   }
 
   // first child of right parse tree is the operator
-  struct Node *op = node_get_kid(right, 0);
-  int op_tag = node_get_tag(op);
+  Node *op = right->get_kid(0);
+  int op_tag = op->get_tag();
 
   // second child is an operand (T or F), convert it to AST
-  struct Node *operand_ast = buildast(node_get_kid(right, 1));
+  Node *operand_ast = buildast(right->get_kid(1));
 
   // join current expression AST with new operand
   int ast_tag = buildast_operator_tag(op_tag);
-  ast = node_build2(ast_tag, ast, operand_ast);
+  ast = new Node(ast_tag, {ast, operand_ast});
 
   // continue recursively
-  return buildast_left(ast, node_get_kid(right, 2));
+  return buildast_left(ast, right->get_kid(2));
 }
 
-struct Node *buildast(struct Node *t) {
-  int tag = node_get_tag(t);
+} // end anonymous namespace
+
+Node *buildast(Node *t) {
+  int tag = t->get_tag();
 
   switch (tag) {
   case NODE_E:
   case NODE_T: // restructure for left associativity
-    return buildast_left(buildast(node_get_kid(t, 0)), node_get_kid(t, 1));
+    return buildast_left(buildast(t->get_kid(0)), t->get_kid(1));
 
   case NODE_F: // parenthesized expression, identifier, or integer literal
-    return buildast(node_get_kid(t, node_get_num_kids(t) == 3 ? 1 : 0));
+    return buildast(t->get_kid(t->get_num_kids() == 3 ? 1 : 0));
 
   case TOK_IDENTIFIER: // variable reference
-    return node_alloc_str_copy(AST_VARREF, node_get_str(t));
+    return new Node(AST_VARREF, t->get_str());
 
   case TOK_INTEGER_LITERAL: // integer literal
-    {
-      const char *lexeme = node_get_str(t);
-      struct Node *ast = node_alloc_str_copy(AST_INT_LITERAL, lexeme);
-      node_set_ival(ast, atol(lexeme));
-      return ast;
-    }
+    return new Node(AST_INT_LITERAL, t->get_str());
 
   default:
-    err_fatal("Unknown parse node type %d\n", tag);
-    return NULL;
+    RuntimeError::raise("Unknown parse node type %d", tag);
   }
 }

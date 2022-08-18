@@ -18,20 +18,10 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-#ifndef TREEPRINT_H
-#define TREEPRINT_H
+#include "node_base.h"
 
-#include <string>
-struct Node;
+NodeBase::NodeBase() {
+}
 
-class TreePrint {
-public:
-  TreePrint();
-  virtual ~TreePrint();
-
-  void print(Node *t) const;
-
-  virtual std::string node_tag_to_string(int tag) const = 0;
-};
-
-#endif // TREEPRINT_H
+NodeBase::~NodeBase() {
+}

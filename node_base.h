@@ -18,20 +18,24 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-#ifndef TREEPRINT_H
-#define TREEPRINT_H
+#ifndef NODE_BASE_H
+#define NODE_BASE_H
 
-#include <string>
-struct Node;
+// The Node class will inherit from this type, so you can use it
+// to define any attributes and methods that Node objects should have
+// (constant value, results of semantic analysis, code generation info,
+// etc.)
+class NodeBase {
+private:
+  // fields could go here
 
-class TreePrint {
+  // copy ctor and assignment operator not supported
+  NodeBase(const NodeBase &);
+  NodeBase &operator=(const NodeBase &);
+
 public:
-  TreePrint();
-  virtual ~TreePrint();
-
-  void print(Node *t) const;
-
-  virtual std::string node_tag_to_string(int tag) const = 0;
+  NodeBase();
+  virtual ~NodeBase();  
 };
 
-#endif // TREEPRINT_H
+#endif // NODE_BASE_H

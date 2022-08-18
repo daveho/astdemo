@@ -18,20 +18,33 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-#ifndef TREEPRINT_H
-#define TREEPRINT_H
+#ifndef LOCATION_H
+#define LOCATION_H
 
 #include <string>
-struct Node;
 
-class TreePrint {
+class Location {
+private:
+  std::string m_srcfile;
+  int m_line, m_col;
+
 public:
-  TreePrint();
-  virtual ~TreePrint();
+  Location();
+  Location(const std::string &srcfile, int line, int col);
+  Location(const Location &other);
+  ~Location();
 
-  void print(Node *t) const;
+  Location &operator=(const Location &rhs);
 
-  virtual std::string node_tag_to_string(int tag) const = 0;
+  bool is_valid() const { return m_line > 0; }
+
+  std::string get_srcfile() const { return m_srcfile; }
+  int get_line() const { return m_line; }
+  int get_col() const { return m_col; }
+
+  void advance(int num_cols) { m_col += num_cols; }
+
+  void next_line() { m_line++; m_col = 1; }
 };
 
-#endif // TREEPRINT_H
+#endif // LOCATION_H
