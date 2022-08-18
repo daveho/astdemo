@@ -151,7 +151,6 @@ Node *Parser2::parse_F() {
     return ast;
   } else {
     SyntaxError::raise(next_tok->get_loc(), "Invalid primary expression");
-    return nullptr;
   }
 }
 
