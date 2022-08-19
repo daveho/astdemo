@@ -26,6 +26,12 @@
 #include "location.h"
 #include "node_base.h"
 
+// Tree node class, suitable for parse trees and ASTs.
+// Nodes can also be used as tokens returned by a lexer.
+// Note that parent nodes take responsibility for deleting
+// their children, so to delete an entire tree, it is
+// sufficient to delete the root.
+
 class Node : public NodeBase {
 private:
   int m_tag;

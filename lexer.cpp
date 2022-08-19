@@ -19,6 +19,9 @@ Lexer::Lexer(FILE *in, const std::string &filename)
 }
 
 Lexer::~Lexer() {
+  if (m_next != nullptr) {
+    delete m_next;
+ }
 }
 
 Node *Lexer::next() {

@@ -61,6 +61,10 @@ Node::Node(int tag, const std::string &str)
 }
 
 Node::~Node() {
+  // delete child nodes
+  for (auto i = m_kids.begin(); i != m_kids.end(); ++i) {
+    delete *i;
+  }
 }
 
 void Node::append_kid(Node *kid) {

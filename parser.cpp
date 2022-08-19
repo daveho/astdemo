@@ -1,4 +1,5 @@
 #include <string>
+#include <memory>
 #include "treeprint.h"
 #include "token.h"
 #include "exceptions.h"
@@ -85,15 +86,15 @@ Node *Parser::parse() {
 }
 
 Node *Parser::parse_E() {
-  Node *e = new Node(NODE_E);
+  std::unique_ptr<Node> e(new Node(NODE_E));
   // E -> ^ T E'
   e->append_kid(parse_T());
   e->append_kid(parse_EPrime());
-  return e;
+  return e.release();
 }
 
 Node *Parser::parse_EPrime() {
-  Node *eprime = new Node(NODE_EPrime);
+  std::unique_ptr<Node> eprime(new Node(NODE_EPrime));
 
   // E' -> ^ + T E'
   // E' -> ^ - T E'
@@ -116,19 +117,19 @@ Node *Parser::parse_EPrime() {
     // apply epsilon production (by doing nothing)
   }
 
-  return eprime;
+  return eprime.release();
 }
 
 Node *Parser::parse_T() {
-  Node *t = new Node(NODE_T);
+  std::unique_ptr<Node> t(new Node(NODE_T));
   // T -> F T'
   t->append_kid(parse_F());
   t->append_kid(parse_TPrime());
-  return t;
+  return t.release();
 }
 
 Node *Parser::parse_TPrime() {
-  Node *tprime = new Node(NODE_TPrime);
+  std::unique_ptr<Node> tprime(new Node(NODE_TPrime));
 
   // T' -> ^ * F T'
   // T' -> ^ / F T'
@@ -151,7 +152,7 @@ Node *Parser::parse_TPrime() {
     // apply epsilon production by doing nothing
   }
 
-  return tprime;
+  return tprime.release();
 }
 
 Node *Parser::parse_F() {
@@ -159,7 +160,7 @@ Node *Parser::parse_F() {
   // F -> ^ i
   // F -> ^ ( E )
 
-  Node *f = new Node(NODE_F);
+  std::unique_ptr<Node> f(new Node(NODE_F));
 
   Node *next_tok = m_lexer->peek();
   if (!next_tok) {
@@ -182,18 +183,18 @@ Node *Parser::parse_F() {
     SyntaxError::raise(next_tok->get_loc(), "Invalid primary expression");
   }
 
-  return f;
+  return f.release();
 }
 
 Node *Parser::expect(enum TokenKind tok_kind) {
-  Node *next_terminal = m_lexer->next();
+  std::unique_ptr<Node> next_terminal(m_lexer->next());
   if (!next_terminal) {
     error_at_current_pos("Unexpected end of input");
   }
   if (next_terminal->get_tag() != tok_kind) {
     SyntaxError::raise(next_terminal->get_loc(), "Unexpected token '%s'", next_terminal->get_str().c_str());
   }
-  return next_terminal;
+  return next_terminal.release();
 }
 
 void Parser::error_at_current_pos(const std::string &msg) {

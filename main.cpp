@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h> // for getopt
+#include <memory>
 #include "lexer.h"
 #include "parser.h"
 #include "parser2.h"
@@ -68,22 +69,22 @@ int execute(int argc, char **argv) {
       }
     }
   } else if (mode == PRINT_PARSE_TREE || mode == BUILD_AST) {
-    Parser *parser = new Parser(lexer);
-    Node *root = parser->parse();
+    std::unique_ptr<Parser> parser(new Parser(lexer));
+    std::unique_ptr<Node> root(parser->parse());
 
     if (mode == PRINT_PARSE_TREE) {
       ParserTreePrint tp;
-      tp.print(root);
+      tp.print(root.get());
     } else {
-      Node *ast = buildast(root);
+      std::unique_ptr<Node> ast(buildast(root.get()));
       ASTTreePrint tp;
-      tp.print(ast);
+      tp.print(ast.get());
     }
   } else {
-    Parser2 *parser2 = new Parser2(lexer);
-    Node *ast = parser2->parse();
+    std::unique_ptr<Parser2> parser2(new Parser2(lexer));
+    std::unique_ptr<Node> ast(parser2->parse());
     ASTTreePrint tp;
-    tp.print(ast);
+    tp.print(ast.get());
   }
 
   return 0;
