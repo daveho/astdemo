@@ -140,11 +140,8 @@ Node *Parser2::parse_F() {
     // F -> ^ n
     // F -> ^ i
     std::unique_ptr<Node> tok(expect(static_cast<enum TokenKind>(tag)));
-    int ast_tag = tag == TOK_INTEGER_LITERAL ? AST_INT_LITERAL : AST_VARREF;
-    Node *ast = new Node(ast_tag);
-    ast->set_str(tok->get_str());
-    ast->set_loc(tok->get_loc());
-    return ast;
+    tok->set_tag(tag == TOK_INTEGER_LITERAL ? AST_INT_LITERAL : AST_VARREF);
+    return tok.release();
   } else if (tag == TOK_LPAREN) {
     // F -> ^ ( E )
     expect_and_discard(TOK_LPAREN);
