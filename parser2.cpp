@@ -1,4 +1,5 @@
 #include <string>
+#include <memory>
 #include "token.h"
 #include "ast.h"
 #include "exceptions.h"
@@ -48,10 +49,12 @@ Node *Parser2::parse_E() {
 
 // This function is passed the "current" portion of the AST
 // that has been built so far for the additive expression.
-Node *Parser2::parse_EPrime(Node *ast) {
+Node *Parser2::parse_EPrime(Node *ast_) {
   // E' -> ^ + T E'
   // E' -> ^ - T E'
   // E' -> ^ epsilon
+
+  std::unique_ptr<Node> ast(ast_);
 
   // peek at next token
   Node *next_tok = m_lexer->peek();
@@ -60,24 +63,23 @@ Node *Parser2::parse_EPrime(Node *ast) {
     if (next_tok_tag == TOK_PLUS || next_tok_tag == TOK_MINUS)  {
       // E' -> ^ + T E'
       // E' -> ^ - T E'
-      Node *op = expect(static_cast<enum TokenKind>(next_tok_tag));
+      std::unique_ptr<Node> op(expect(static_cast<enum TokenKind>(next_tok_tag)));
 
       // build AST for next term, incorporate into current AST
       Node *term_ast = parse_T();
-      ast = new Node(next_tok_tag == TOK_PLUS ? AST_ADD : AST_SUB, {ast, term_ast});
+      ast.reset(new Node(next_tok_tag == TOK_PLUS ? AST_ADD : AST_SUB, {ast.release(), term_ast}));
 
       // copy source information from operator node
       ast->set_loc(op->get_loc());
-      delete op;
 
       // continue recursively
-      return parse_EPrime(ast);
+      return parse_EPrime(ast.release());
     }
   }
 
   // E' -> ^ epsilon
   // No more additive operators, so just return the completed AST
-  return ast;
+  return ast.release();
 }
 
 Node *Parser2::parse_T() {
@@ -90,10 +92,12 @@ Node *Parser2::parse_T() {
   return parse_TPrime(ast);
 }
 
-Node *Parser2::parse_TPrime(Node *ast) {
+Node *Parser2::parse_TPrime(Node *ast_) {
   // T' -> ^ * F T'
   // T' -> ^ / F T'
   // T' -> ^ epsilon
+
+  std::unique_ptr<Node> ast(ast_);
 
   // peek at next token
   Node *next_tok = m_lexer->peek();
@@ -102,24 +106,23 @@ Node *Parser2::parse_TPrime(Node *ast) {
     if (next_tok_tag == TOK_TIMES || next_tok_tag == TOK_DIVIDE)  {
       // T' -> ^ * F T'
       // T' -> ^ / F T'
-      Node *op = expect(static_cast<enum TokenKind>(next_tok_tag));
+      std::unique_ptr<Node> op(expect(static_cast<enum TokenKind>(next_tok_tag)));
 
       // build AST for next primary expression, incorporate into current AST
       Node *primary_ast = parse_F();
-      ast = new Node(next_tok_tag == TOK_TIMES ? AST_MULTIPLY : AST_DIVIDE, {ast, primary_ast});
+      ast.reset(new Node(next_tok_tag == TOK_TIMES ? AST_MULTIPLY : AST_DIVIDE, {ast.release(), primary_ast}));
 
       // copy source information from operator node
       ast->set_loc(op->get_loc());
-      delete op;
 
       // continue recursively
-      return parse_TPrime(ast);
+      return parse_TPrime(ast.release());
     }
   }
 
   // T' -> ^ epsilon
   // No more multiplicative operators, so just return the completed AST
-  return ast;
+  return ast.release();
 }
 
 Node *Parser2::parse_F() {
@@ -136,33 +139,29 @@ Node *Parser2::parse_F() {
   if (tag == TOK_INTEGER_LITERAL || tag == TOK_IDENTIFIER) {
     // F -> ^ n
     // F -> ^ i
-    Node *tok = expect(static_cast<enum TokenKind>(tag));
+    std::unique_ptr<Node> tok(expect(static_cast<enum TokenKind>(tag)));
     int ast_tag = tag == TOK_INTEGER_LITERAL ? AST_INT_LITERAL : AST_VARREF;
     Node *ast = new Node(ast_tag);
     ast->set_str(tok->get_str());
     ast->set_loc(tok->get_loc());
-    delete tok;
     return ast;
   } else if (tag == TOK_LPAREN) {
     // F -> ^ ( E )
     expect_and_discard(TOK_LPAREN);
-    Node *ast = parse_E();
+    std::unique_ptr<Node> ast(parse_E());
     expect_and_discard(TOK_RPAREN);
-    return ast;
+    return ast.release();
   } else {
     SyntaxError::raise(next_tok->get_loc(), "Invalid primary expression");
   }
 }
 
 Node *Parser2::expect(enum TokenKind tok_kind) {
-  Node *next_terminal = m_lexer->next();
-  if (!next_terminal) {
-    error_at_current_pos("Unexpected end of input");
-  }
+  std::unique_ptr<Node> next_terminal(m_lexer->next());
   if (next_terminal->get_tag() != tok_kind) {
     SyntaxError::raise(next_terminal->get_loc(), "Unexpected token '%s'", next_terminal->get_str().c_str());
   }
-  return next_terminal;
+  return next_terminal.release();
 }
 
 void Parser2::expect_and_discard(enum TokenKind tok_kind) {
