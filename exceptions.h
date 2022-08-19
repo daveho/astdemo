@@ -34,6 +34,8 @@ public:
   NearlyCException(const NearlyCException &other);
   virtual ~NearlyCException();
 
+  bool has_location() const { return m_loc.is_valid(); }
+
   const Location &get_loc() const;
 };
 
