@@ -5,7 +5,7 @@
 
 // AST node tags
 enum ASTKind {
-  AST_ADD,
+  AST_ADD = 2000,
   AST_SUB,
   AST_MULTIPLY,
   AST_DIVIDE,
