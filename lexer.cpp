@@ -26,6 +26,9 @@ Lexer::~Lexer() {
 
 Node *Lexer::next() {
   fill();
+  if (m_next == nullptr) {
+    SyntaxError::raise(get_current_pos(), "Unexpected end of input");
+  }
   Node *tok = m_next;
   m_next = nullptr;
   return tok;
