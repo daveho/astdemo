@@ -13,11 +13,6 @@ enum ASTKind {
   AST_INT_LITERAL,
 };
 
-/*
-// stringify function for AST node tags
-const char *ast_get_name_for_tag(int tag);
-*/
-
 class ASTTreePrint : public TreePrint {
 public:
   ASTTreePrint();
