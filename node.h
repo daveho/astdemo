@@ -1,4 +1,4 @@
-// Copyright (c) 2021, David H. Hovemeyer <david.hovemeyer@gmail.com>
+// Copyright (c) 2021-2022, David H. Hovemeyer <david.hovemeyer@gmail.com>
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -50,11 +50,6 @@ private:
 public:
   typedef std::vector<Node *>::const_iterator const_iterator;
 
-  // Node::I is a concise shorthand for std::initializer_list<Node *>,
-  // and is necessary when creating node objects with initializer lists
-  // (for adding children) using an Arena
-  typedef std::initializer_list<Node *> I;
-
   Node(int tag);
   Node(int tag, std::initializer_list<Node *> kids);
   Node(int tag, const std::vector<Node *> &kids);
@@ -63,8 +58,9 @@ public:
   virtual ~Node();
 
   int get_tag() const { return m_tag; }
-  std::string get_str() const { return m_str; }
+  void set_tag(int tag) { m_tag = tag; }
 
+  std::string get_str() const { return m_str; }
   void set_str(const std::string &str) { m_str = str; }
 
   void append_kid(Node *kid);
@@ -78,6 +74,16 @@ public:
 
   void set_loc(const Location &loc) { m_loc = loc; m_loc_was_set_explicitly = true; }
   const Location &get_loc() const { return m_loc; }
+
+  // do a preorder traversal of the tree, invoking specified
+  // function on each node
+  template<typename Fn>
+  void preorder(Fn fn) {
+    fn(this);
+    for (auto i = m_kids.begin(); i != m_kids.end(); ++i) {
+      (*i)->preorder(fn);
+    }
+  }
 };
 
 #endif // NODE_H
