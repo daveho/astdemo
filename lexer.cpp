@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cctype>
 #include <string>
 #include "cpputil.h"
@@ -11,7 +12,6 @@
 
 Lexer::Lexer(FILE *in, const std::string &filename)
   : m_in(in)
-  , m_next(nullptr)
   , m_filename(filename)
   , m_line(1)
   , m_col(1)
@@ -19,24 +19,34 @@ Lexer::Lexer(FILE *in, const std::string &filename)
 }
 
 Lexer::~Lexer() {
-  if (m_next != nullptr) {
-    delete m_next;
- }
+  // delete any cached lookahead tokens
+  for (auto i = m_lookahead.begin(); i != m_lookahead.end(); ++i) {
+    delete *i;
+  }
 }
 
 Node *Lexer::next() {
-  fill();
-  if (m_next == nullptr) {
+  fill(1);
+  if (m_lookahead.empty()) {
     SyntaxError::raise(get_current_pos(), "Unexpected end of input");
   }
-  Node *tok = m_next;
-  m_next = nullptr;
+  Node *tok = m_lookahead.front();
+  m_lookahead.pop_front();
   return tok;
 }
 
-Node *Lexer::peek() {
-  fill();
-  return m_next;
+Node *Lexer::peek(int how_many) {
+  // try to get as many lookahead tokens as required
+  fill(how_many);
+
+  // if there aren't enough lookahead tokens,
+  // then the input ended before the token we want
+  if (int(m_lookahead.size()) < how_many) {
+    return nullptr;
+  }
+
+  // return the pointer to the Node representing the token
+  return m_lookahead.at(how_many - 1);
 }
 
 Location Lexer::get_current_pos() const {
@@ -68,9 +78,10 @@ void Lexer::unread(int c) {
   m_col--;
 }
 
-void Lexer::fill() {
-  if (!m_eof && !m_next) {
-    m_next = read_token();
+void Lexer::fill(int how_many) {
+  assert(how_many > 0);
+  if (!m_eof && int(m_lookahead.size()) < how_many) {
+    m_lookahead.push_back(read_token());
   }
 }
 
@@ -113,6 +124,12 @@ Node *Lexer::read_token() {
       return token_create(TOK_LPAREN, lexeme, line, col);
     case ')':
       return token_create(TOK_RPAREN, lexeme, line, col);
+#ifdef SOLUTION
+    case ';':
+      return token_create(TOK_SEMICOLON, lexeme, line, col);
+    case '=':
+      return token_create(TOK_ASSIGN, lexeme, line, col);
+#endif
     default:
       SyntaxError::raise(get_current_pos(), "Unrecognized character '%c'", c);
     }
