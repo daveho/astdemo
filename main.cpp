@@ -93,8 +93,13 @@ int execute(int argc, char **argv) {
 int main(int argc, char **argv) {
   try {
     return execute(argc, argv);
-  } catch (NearlyCException &ex) {
-    fprintf(stderr, "Error: %s\n", ex.what());
+  } catch (BaseException &ex) {
+    if (ex.has_location()) {
+      const Location &loc = ex.get_loc();
+      fprintf(stderr, "%s:%d: Error: %s\n", loc.get_srcfile().c_str(), loc.get_line(), ex.what());
+    } else {
+      fprintf(stderr, "Error: %s\n", ex.what());
+    }
     return 1;
   }
 }
