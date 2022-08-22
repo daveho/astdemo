@@ -30,7 +30,7 @@ private:
   void expect_and_discard(enum TokenKind tok_kind);
 
   // Report an error at current lexer position
-  void error_at_current_pos(const std::string &msg);
+  void error_at_current_loc(const std::string &msg);
 };
 
 #endif // PARSER2_H

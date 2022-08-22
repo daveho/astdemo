@@ -132,7 +132,7 @@ Node *Parser2::parse_F() {
 
   Node *next_tok = m_lexer->peek();
   if (!next_tok) {
-    error_at_current_pos("Unexpected end of input looking for primary expression");
+    error_at_current_loc("Unexpected end of input looking for primary expression");
   }
 
   int tag = next_tok->get_tag();
@@ -166,6 +166,6 @@ void Parser2::expect_and_discard(enum TokenKind tok_kind) {
   delete tok;
 }
 
-void Parser2::error_at_current_pos(const std::string &msg) {
-  SyntaxError::raise(m_lexer->get_current_pos(), "%s", msg.c_str());
+void Parser2::error_at_current_loc(const std::string &msg) {
+  SyntaxError::raise(m_lexer->get_current_loc(), "%s", msg.c_str());
 }

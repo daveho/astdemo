@@ -164,7 +164,7 @@ Node *Parser::parse_F() {
 
   Node *next_tok = m_lexer->peek();
   if (!next_tok) {
-    error_at_current_pos("Unexpected end of input looking for primary expression");
+    error_at_current_loc("Unexpected end of input looking for primary expression");
   }
 
   int tag = next_tok->get_tag();
@@ -189,7 +189,7 @@ Node *Parser::parse_F() {
 Node *Parser::expect(enum TokenKind tok_kind) {
   std::unique_ptr<Node> next_terminal(m_lexer->next());
   if (!next_terminal) {
-    error_at_current_pos("Unexpected end of input");
+    error_at_current_loc("Unexpected end of input");
   }
   if (next_terminal->get_tag() != tok_kind) {
     SyntaxError::raise(next_terminal->get_loc(), "Unexpected token '%s'", next_terminal->get_str().c_str());
@@ -197,6 +197,6 @@ Node *Parser::expect(enum TokenKind tok_kind) {
   return next_terminal.release();
 }
 
-void Parser::error_at_current_pos(const std::string &msg) {
-  SyntaxError::raise(m_lexer->get_current_pos(), "%s", msg.c_str());
+void Parser::error_at_current_loc(const std::string &msg) {
+  SyntaxError::raise(m_lexer->get_current_loc(), "%s", msg.c_str());
 }

@@ -28,7 +28,7 @@ Lexer::~Lexer() {
 Node *Lexer::next() {
   fill(1);
   if (m_lookahead.empty()) {
-    SyntaxError::raise(get_current_pos(), "Unexpected end of input");
+    SyntaxError::raise(get_current_loc(), "Unexpected end of input");
   }
   Node *tok = m_lookahead.front();
   m_lookahead.pop_front();
@@ -49,7 +49,7 @@ Node *Lexer::peek(int how_many) {
   return m_lookahead.at(how_many - 1);
 }
 
-Location Lexer::get_current_pos() const {
+Location Lexer::get_current_loc() const {
   return Location(m_filename, m_line, m_col);
 }
 
@@ -131,7 +131,7 @@ Node *Lexer::read_token() {
       return token_create(TOK_ASSIGN, lexeme, line, col);
 #endif
     default:
-      SyntaxError::raise(get_current_pos(), "Unrecognized character '%c'", c);
+      SyntaxError::raise(get_current_loc(), "Unrecognized character '%c'", c);
     }
   } 
 }

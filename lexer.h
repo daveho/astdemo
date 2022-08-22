@@ -30,7 +30,8 @@ public:
   // etc.)
   Node *peek(int how_far = 1);
 
-  Location get_current_pos() const;
+  // Get the current source location: useful for error reporting
+  Location get_current_loc() const;
 
 private:
   int read();
