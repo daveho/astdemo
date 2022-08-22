@@ -107,7 +107,7 @@ Node *Lexer::read_token() {
   lexeme.push_back(char(c));
 
   if (isalpha(c)) {
-    return read_continued_token(TOK_IDENTIFIER, lexeme, line, col, isalpha);
+    return read_continued_token(TOK_IDENTIFIER, lexeme, line, col, isalnum);
   } else if (isdigit(c)) {
     return read_continued_token(TOK_INTEGER_LITERAL, lexeme, line, col, isdigit);
   } else {
